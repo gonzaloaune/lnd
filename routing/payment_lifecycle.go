@@ -76,7 +76,7 @@ func (p *paymentLifecycle) resumePayment() ([32]byte, *route.Route, error) {
 			// If this was a resumed attempt, we must regenerate the
 			// circuit.
 			_, c, err := generateSphinxPacket(
-				&p.attempt.Route, p.payment.PaymentHash[:],
+				&p.attempt.Route, p.payment.PaymentHash[:], p.payment.DestinationEOB
 				p.attempt.SessionKey,
 			)
 			if err != nil {
@@ -251,7 +251,8 @@ func (p *paymentLifecycle) createNewPaymentAttempt() (lnwire.ShortChannelID,
 	// with the htlcAdd message that we send directly to the
 	// switch.
 	onionBlob, c, err := generateSphinxPacket(
-		route, p.payment.PaymentHash[:], sessionKey,
+		route, p.payment.PaymentHash[:],
+		p.payment.DestinationEOB, sessionKey,
 	)
 	if err != nil {
 		return lnwire.ShortChannelID{}, nil, err

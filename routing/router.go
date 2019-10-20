@@ -1484,7 +1484,7 @@ func generateNewSessionKey() (*btcec.PrivateKey, error) {
 // the onion route specified by the passed layer 3 route. The blob returned
 // from this function can immediately be included within an HTLC add packet to
 // be sent to the first hop within the route.
-func generateSphinxPacket(rt *route.Route, paymentHash []byte,
+func generateSphinxPacket(rt *route.Route, paymentHash, destEOB []byte,
 	sessionKey *btcec.PrivateKey) ([]byte, *sphinx.Circuit, error) {
 
 	// As a sanity check, we'll ensure that the set of hops has been
@@ -1498,13 +1498,13 @@ func generateSphinxPacket(rt *route.Route, paymentHash []byte,
 	// sphinx payument path which includes per-hop paylods for each hop
 	// that give each node within the route the necessary information
 	// (fees, CLTV value, etc) to properly forward the payment.
-	sphinxPath, err := rt.ToSphinxPath()
+	sphinxPath, err := rt.ToSphinxPath(destEOB)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	log.Tracef("Constructed per-hop payloads for payment_hash=%x: %v",
-		paymentHash[:], newLogClosure(func() string {
+		paymentHash, newLogClosure(func() string {
 			path := make([]sphinx.OnionHop, sphinxPath.TrueRouteLength())
 			for i := range path {
 				hopCopy := sphinxPath[i]
@@ -1599,6 +1599,12 @@ type LightningPayment struct {
 	// OutgoingChannelID is the channel that needs to be taken to the first
 	// hop. If nil, any channel may be used.
 	OutgoingChannelID *uint64
+
+	// DestinationEOB is an optional field that allows the sender to encode
+	// a set of opaque bytes to the final hop. This payload will be
+	// delivered as an EOB as will be onion encrypted just like the rest of
+	// the route.
+	DestinationEOB []byte
 
 	// PaymentRequest is an optional payment request that this payment is
 	// attempting to complete.

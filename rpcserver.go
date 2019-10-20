@@ -2,6 +2,7 @@ package lnd
 
 import (
 	"bytes"
+	crand "crypto/rand"
 	"crypto/tls"
 	"encoding/hex"
 	"errors"
@@ -51,6 +52,8 @@ import (
 	"github.com/lightningnetwork/lnd/routing"
 	"github.com/lightningnetwork/lnd/signal"
 	"github.com/lightningnetwork/lnd/sweep"
+	"github.com/lightningnetwork/lnd/tlv"
+	"github.com/lightningnetwork/lnd/watchtower/wtwire"
 	"github.com/lightningnetwork/lnd/zpay32"
 	"github.com/tv42/zbase32"
 	"golang.org/x/net/context"
@@ -2906,6 +2909,8 @@ type rpcPaymentIntent struct {
 	outgoingChannelID *uint64
 	payReq            []byte
 
+  eob []byte
+
 	route *route.Route
 }
 
@@ -3037,6 +3042,41 @@ func extractPaymentIntent(rpcPayReq *rpcPaymentRequest) (rpcPaymentIntent, error
 	// If the user is manually specifying payment details, then the payment
 	// hash may be encoded as a string.
 	switch {
+		// A sphinx send, so we should generate an EOB with the preimage.
+	case rpcPayReq.KeySend:
+		// TODO(roasbeef): make deterministic? also saves I/O of /dev/random
+		var preImage [32]byte
+		_, err := io.ReadFull(crand.Reader, preImage[:])
+		if err != nil {
+			return payIntent, err
+		}
+
+		rpcsLog.Infof("Sphinx payment! preimage=%x", preImage[:])
+
+		// Now that we have our pre-image, we'll encode it as a TLV
+		// record into a temporary bytes buffer that will become our
+		// final TLV stream.
+		var b bytes.Buffer
+		tlvStream := tlv.NewStream(
+			wtwire.WriteElement, wtwire.ReadElement,
+			tlv.MakePrimitiveRecord(
+				invoices.PreimageTLV, &preImage,
+			),
+			tlv.MakeSentinelRecord(),
+		)
+		if err := tlvStream.Encode(&b); err != nil {
+			return payIntent, err
+		}
+
+		// Populate the EOB to the final hop which indicates that this
+		// is a spontaneous payment.
+		rpcsLog.Infof("TLV bytes: %x", b.Bytes())
+		payIntent.eob = b.Bytes()
+
+		// We'll also set the payment hash accordingly.
+		payHash := sha256.Sum256(preImage[:])
+		copy(payIntent.rHash[:], payHash[:])
+
 	case rpcPayReq.PaymentHashString != "":
 		paymentHash, err := hex.DecodeString(
 			rpcPayReq.PaymentHashString,
@@ -3111,6 +3151,10 @@ func (r *rpcServer) dispatchPaymentIntent(
 			OutgoingChannelID: payIntent.outgoingChannelID,
 			PaymentRequest:    payIntent.payReq,
 			PayAttemptTimeout: routing.DefaultPayAttemptTimeout,
+		}
+
+		if payIntent.eob != nil {
+			payment.DestinationEOB = payIntent.eob
 		}
 
 		preImage, route, routerErr = r.server.chanRouter.SendPayment(

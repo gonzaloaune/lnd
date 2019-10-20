@@ -2111,6 +2111,10 @@ var sendPaymentCommand = cli.Command{
 			Name:  "final_cltv_delta",
 			Usage: "the number of blocks the last hop has to reveal the preimage",
 		},
+		cli.BoolFlag{
+			Name:  "key_send",
+			Usage: "will generate a pre-image and encode it in the sphinx packet, a dest must be set",
+		},
 	),
 	Action: sendPayment,
 }
@@ -2211,11 +2215,12 @@ func sendPayment(ctx *cli.Context) error {
 	req := &lnrpc.SendRequest{
 		Dest: destNode,
 		Amt:  amount,
+		KeySend:  ctx.Bool("key_send"),
 	}
 
 	if ctx.Bool("debug_send") && (ctx.IsSet("payment_hash") || args.Present()) {
 		return fmt.Errorf("do not provide a payment hash with debug send")
-	} else if !ctx.Bool("debug_send") {
+	} else if !ctx.Bool("debug_send") && !ctx.Bool("key_send") {
 		var rHash []byte
 
 		switch {
