@@ -181,7 +181,7 @@ func (r *Route) ToSphinxPath(destEOB []byte) (*sphinx.PaymentPath, error) {
 
 		path[i] = sphinx.OnionHop{
 			NodePub: *pub,
-			HopData: payload
+			HopData: payload,
 		}
 	}
 
