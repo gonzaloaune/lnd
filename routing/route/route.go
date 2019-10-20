@@ -155,7 +155,6 @@ func (r *Route) ToSphinxPath(destEOB []byte) (*sphinx.PaymentPath, error) {
 		}
 
 		hopData := sphinx.HopData{
-			Realm:         [1]byte{0},
 			ForwardAmount: uint64(hop.AmtToForward),
 			OutgoingCltv:  hop.OutgoingTimeLock,
 		}
@@ -181,7 +180,7 @@ func (r *Route) ToSphinxPath(destEOB []byte) (*sphinx.PaymentPath, error) {
 
 		path[i] = sphinx.OnionHop{
 			NodePub: *pub,
-			HopData: payload,
+			HopPayload: payload,
 		}
 	}
 

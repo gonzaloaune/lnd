@@ -3,6 +3,7 @@ package lnd
 import (
 	"bytes"
 	crand "crypto/rand"
+	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
 	"errors"

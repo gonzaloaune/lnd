@@ -76,7 +76,7 @@ func (p *paymentLifecycle) resumePayment() ([32]byte, *route.Route, error) {
 			// If this was a resumed attempt, we must regenerate the
 			// circuit.
 			_, c, err := generateSphinxPacket(
-				&p.attempt.Route, p.payment.PaymentHash[:], p.payment.DestinationEOB
+				&p.attempt.Route, p.payment.PaymentHash[:], p.payment.DestinationEOB,
 				p.attempt.SessionKey,
 			)
 			if err != nil {

@@ -1027,6 +1027,13 @@ type SendRequest struct {
 	//An optional maximum total time lock for the route. If zero, there is no
 	//maximum enforced.
 	CltvLimit            uint32   `protobuf:"varint,10,opt,name=cltv_limit,json=cltvLimit,proto3" json:"cltv_limit,omitempty"`
+
+	//
+	// If set, then no payment hash is required. Instead, we will generate a
+	// payment hash ourselves, and encode the pre-image in an EOB encrypted to the
+	// final hop. Not that the payment request MUST NOT be specified in order for
+	// this flag to be parsed. If set, then the dest MUST be set.
+	KeySend              bool     `protobuf:"varint,11,opt,name=key_send,json=keySend,proto3" json:"key_send,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1125,6 +1132,13 @@ func (m *SendRequest) GetCltvLimit() uint32 {
 		return m.CltvLimit
 	}
 	return 0
+}
+
+func (m *SendRequest) GetKeySend() bool {
+	if m != nil {
+		return m.KeySend
+	}
+	return false
 }
 
 type SendResponse struct {
