@@ -174,7 +174,7 @@ func (r *Route) ToSphinxPath(destEOB []byte) (*sphinx.PaymentPath, error) {
 			hopData.NextAddress[:], nextHop,
 		)
 
-		payload, err := sphinx.NewHopPayload(0, &hopData, destEOB)
+		payload, err := sphinx.NewHopData(0, &hopData, destEOB)
 		if err != nil {
 			return nil, err
 		}
