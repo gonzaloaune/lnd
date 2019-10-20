@@ -54,4 +54,4 @@ replace github.com/lightningnetwork/lnd/ticker => ./ticker
 
 replace github.com/lightningnetwork/lnd/queue => ./queue
 
-replace github.com/lightningnetwork/lightning-onion v0.0.0-20190430041606-751fb4dd8b72bbaec93889249a6c6ca9f71a5598 => github.com/gonzaloaune/lightning-onion v0.0.0-20190111024907-850081b08b6af55aafd933f8e2b26e457a1f0767
+replace github.com/lightningnetwork/lightning-onion v0.0.0-20190430041606-751fb4dd8b72bbaec93889249a6c6ca9f71a5598 => github.com/gonzaloaune/lightning-onion v0.0.0-20190111024907-2e5ae87696046298365ab43bcd1cf3a7a1d69695
